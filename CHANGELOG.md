@@ -1,3 +1,13 @@
+## [1.20.1](https://github.com/Parideboy/morphe-patches/compare/v1.20.0...v1.20.1) (2026-11-24)
+
+### 🐛 Bug Fixes
+
+* **macrofactor:** compile the 5.8.13 patches ([1d6832c](https://github.com/Parideboy/morphe-patches/commit/1d6832ce6549d7d50ce49f752700c39e9b3dd434))
+
+### 🚀 Updated App Support
+
+* **macrofactor:** support 5.8.13 ([863dcf2](https://github.com/Parideboy/morphe-patches/commit/863dcf2a329cde24bb1fa49e686ee5a847754646))
+
 ## [1.20.0](https://github.com/callMeBeyonder/morphe-patches/compare/v1.19.2...v1.20.0) (2026-11-24)
 
 ### ✨ New Features
