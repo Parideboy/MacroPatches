@@ -6,7 +6,6 @@ import app.morphe.patcher.patch.Compatibility
 
 object Constants {
     /**
-    /**
      * MacroFactor (`com.sbs.diet`) — the nutrition tracker, not to be confused with
      * MacroFactor Workouts (`com.sbs.train`).
      *

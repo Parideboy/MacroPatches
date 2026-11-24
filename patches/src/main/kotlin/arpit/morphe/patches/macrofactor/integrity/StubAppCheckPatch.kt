@@ -2,8 +2,6 @@ package arpit.morphe.patches.macrofactor.integrity
 
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.patch.classDefForEach
-import app.morphe.patcher.patch.mutableClassDefBy
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
@@ -50,9 +48,8 @@ private fun ClassDef.hasTokenCtor() =
  */
 private fun ClassDef.implementsTokenProviderInterface(all: Map<String, ClassDef>) =
     interfaces.any { iface ->
-        all[iface]?.methods?.let { methods ->
-            methods.isNotEmpty() && methods.all { it.returnType == TASK && it.parameterTypes.isEmpty() }
-        } == true
+        val methods = all[iface]?.methods ?: return@any false
+        methods.count() > 0 && methods.all { it.returnType == TASK && it.parameterTypes.none() }
     }
 
 /**
