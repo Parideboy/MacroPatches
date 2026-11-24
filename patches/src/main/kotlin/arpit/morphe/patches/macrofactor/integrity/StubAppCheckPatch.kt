@@ -2,6 +2,8 @@ package arpit.morphe.patches.macrofactor.integrity
 
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.patch.classDefForEach
+import app.morphe.patcher.patch.mutableClassDefBy
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
@@ -79,7 +81,7 @@ val stubAppCheckPatch = bytecodePatch(
         "still rejects the token, so AI food search keeps failing there. Client-side check only.",
     default = false,
 ) {
-    compatibleWith(COMPATIBILITY_MACROFACTOR)
+    compatibleWith(COMPATIBILITY_MACROFACTOR_DIET_5813)
 
     execute {
         val allClasses = mutableMapOf<String, ClassDef>()
@@ -113,18 +115,23 @@ val stubAppCheckPatch = bytecodePatch(
         // 4. Replace the token task's body: return a successful task with a throwaway token
         //    (expiresIn 1 h, issued now). The old body -- the whole Play Integrity attestation and
         //    token exchange -- is left behind the return as unreachable code.
+        //
+        // The ctor takes (expiresInMillis, receivedAtMillis, token). Registers are laid out so the
+        // 6 argument slots are contiguous and /range can be used: 3-register invoke tops out at 5
+        // registers, and the instance plus two wide pairs plus the string need 6.
+        // `.locals 4` + 2 parameters = 6 registers, and v4/v5 alias the dead p0/p1 after the return.
         val impl = tokenTask.implementation!!
         if (impl.registerCount < 6) throw PatchException("token method has only ${impl.registerCount} registers")
         tokenTask.replaceBlockAtLabel(
             0,
             """
+                new-instance v0, $tokenType
+                const-wide/32 v1, 0x36ee80
                 invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
-                move-result-wide v0
-                const-wide/32 v2, 0x36ee80
-                const-string v4, "morphe-appcheck-stub"
-                new-instance v5, $tokenType
-                invoke-direct {v5, v2, v3, v0, v1, v4}, $tokenType-><init>(JJLjava/lang/String;)V
-                invoke-static {v5}, Lcom/google/android/gms/tasks/Tasks;->forResult(Ljava/lang/Object;)Lcom/google/android/gms/tasks/Task;
+                move-result-wide v3
+                const-string v5, "morphe-appcheck-stub"
+                invoke-direct/range {v0 .. v5}, $tokenType-><init>(JJLjava/lang/String;)V
+                invoke-static {v0}, Lcom/google/android/gms/tasks/Tasks;->forResult(Ljava/lang/Object;)Lcom/google/android/gms/tasks/Task;
                 move-result-object v0
                 return-object v0
             """,

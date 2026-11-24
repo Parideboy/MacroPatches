@@ -2,8 +2,10 @@ package arpit.morphe.patches.macrofactor.signature
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.morphe.util.byteArrayOf
 import app.morphe.util.getEndEntityCertificate
+import arpit.morphe.patches.macrofactor.diet.premium.GetSignatureHashShapeFingerprint
 import java.security.MessageDigest
 
 // SHA-1 of the original signing certificate (see analysis notes/recon.md), used as a
@@ -25,29 +27,50 @@ val signatureHashSpoofPatch = bytecodePatch(
     default = false
 ) {
     execute {
-        val certificate = runCatching {
-            getEndEntityCertificate(packageMetadata.signingCertificates)
-        }.getOrNull()
-
-        val certHash = certificate
-            ?.let { MessageDigest.getInstance("SHA-1").digest(it.encoded) }
-            ?: byteArrayOf(FALLBACK_CERT_HASH)
-
-        // .registers 3 => p0/p1 are the parameters, v0 is a free local register.
-        // Returns before any original instruction runs.
-        GetSignatureHashFingerprint.method.addInstructions(
-            0,
-            """
-                const/16 v0, 0x14
-                new-array v0, v0, [B
-                fill-array-data v0, :original_cert_hash
-                return-object v0
-
-                :original_cert_hash
-                .array-data 1
-                    ${certHash.joinToString(separator = "\n") { "0x%02Xt".format(it.toInt() and 0xFF) }}
-                .end array-data
-            """
+        GetSignatureHashFingerprint.method.injectOriginalCertHash(
+            runCatching { getEndEntityCertificate(packageMetadata.signingCertificates) }
+                .getOrNull()
+                ?.let { MessageDigest.getInstance("SHA-1").digest(it.encoded) }
+                ?: byteArrayOf(FALLBACK_CERT_HASH)
         )
     }
+}
+
+/**
+ * Same as [signatureHashSpoofPatch], for builds where R8 renamed GMS wholesale
+ * (MacroFactor 5.8.13): resolves the hash method by shape via
+ * [GetSignatureHashShapeFingerprint] instead of by `AndroidUtilsLight`'s name.
+ */
+val signatureHashSpoofShapePatch = bytecodePatch(
+    default = false
+) {
+    execute {
+        GetSignatureHashShapeFingerprint.method.injectOriginalCertHash(
+            runCatching { getEndEntityCertificate(packageMetadata.signingCertificates) }
+                .getOrNull()
+                ?.let { MessageDigest.getInstance("SHA-1").digest(it.encoded) }
+                ?: byteArrayOf(FALLBACK_CERT_HASH)
+        )
+    }
+}
+
+/**
+ * Returns [certHash] before any original instruction runs. The target methods take two
+ * parameters, so `p0`/`p1` are the parameters and `v0` is a free local register.
+ */
+private fun MutableMethod.injectOriginalCertHash(certHash: ByteArray) {
+    addInstructions(
+        0,
+        """
+            const/16 v0, 0x14
+            new-array v0, v0, [B
+            fill-array-data v0, :original_cert_hash
+            return-object v0
+
+            :original_cert_hash
+            .array-data 1
+                ${certHash.joinToString(separator = "\n") { "0x%02Xt".format(it.toInt() and 0xFF) }}
+            .end array-data
+        """
+    )
 }
