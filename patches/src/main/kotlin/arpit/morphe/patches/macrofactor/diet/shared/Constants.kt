@@ -6,6 +6,7 @@ import app.morphe.patcher.patch.Compatibility
 
 object Constants {
     /**
+    /**
      * MacroFactor (`com.sbs.diet`) — the nutrition tracker, not to be confused with
      * MacroFactor Workouts (`com.sbs.train`).
      *
@@ -20,6 +21,25 @@ object Constants {
         targets = listOf(
             AppTarget(
                 version = "5.8.11"
+            )
+        )
+    )
+
+    /**
+     * Same app, 5.8.13 (versionCode 893). This build switched R8 to whole-dex class
+     * renaming -- even library internals (RevenueCat, GMS utils) lose their names -- so
+     * patches fingerprinting on class or method names cannot run against it. Only
+     * shape- and string-based fingerprints survive; patches pinned to earlier builds
+     * are kept on their own compatibility entry so Morphe does not offer them here.
+     */
+    val COMPATIBILITY_MACROFACTOR_DIET_5813 = Compatibility(
+        name = "MacroFactor",
+        packageName = "com.sbs.diet",
+        apkFileType = ApkFileType.XAPK,
+        appIconColor = 0x000000,
+        targets = listOf(
+            AppTarget(
+                version = "5.8.13"
             )
         )
     )
