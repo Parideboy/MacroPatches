@@ -808,26 +808,7 @@
               "isExperimental": false,
               "minSdk": null,
               "description": null
-            }
-          ]
-        }
-      ],
-      "options": []
-    },
-    {
-      "name": "Unlock Premium (Root)",
-      "description": "Unlocks all premium features. Requires root: the patched build must be mounted over the genuine Play-signed install — a re-signed sideload will not work.",
-      "default": true,
-      "category": null,
-      "compatiblePackages": [
-        {
-          "packageName": "com.sbs.diet",
-          "name": "MacroFactor",
-          "description": null,
-          "apkFileType": "XAPK",
-          "appIconColor": "#000000",
-          "signatures": null,
-          "targets": [
+            },
             {
               "version": "5.8.13",
               "versionCodes": null,

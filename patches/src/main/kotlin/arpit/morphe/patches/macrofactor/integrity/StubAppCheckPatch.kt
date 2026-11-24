@@ -41,6 +41,34 @@ private fun ClassDef.hasTokenCtor() =
     methods.any { it.name == "<init>" && it.parameterTypes == listOf("J", "J", "Ljava/lang/String;") }
 
 /**
+ * The AppCheckToken result class, found by what it does rather than by who casts to it: it is the
+ * only class with a `(long, long, String)` constructor that also (de)serializes those two longs,
+ * which it reads from the token's `expiresIn` / `receivedAt` JSON fields.
+ *
+ * The earlier version followed the pigeon reply wrapper's `CHECK_CAST` targets instead, which
+ * resolved locally but failed on-device (`AppCheckToken result class not found`) across patcher
+ * versions, so the wrapper is only used as a fallback now.
+ */
+private fun findTokenClass(
+    all: Map<String, ClassDef>,
+    replyWrapper: ClassDef,
+): String? {
+    val byShape = all.values.filter { c ->
+        c.hasTokenCtor() && c.methods.any { m ->
+            m.referencesString("receivedAt") && m.referencesString("expiresIn")
+        }
+    }
+    val candidates = if (byShape.isNotEmpty()) {
+        byShape.map { it.type }
+    } else {
+        buildSet { replyWrapper.methods.forEach { it.castTypes(this) } }
+            .filter { type -> all[type]?.hasTokenCtor() == true }
+    }
+
+    return candidates.singleOrNull()
+}
+
+/**
  * An interface declaring only two no-arg methods returning Task: the AppCheckProvider interface
  * (getToken / getLimitedUseToken). Firebase Auth also builds a Play IntegrityManager for phone
  * verification, so the factory call alone does not pin the AppCheck provider -- but only the
@@ -99,15 +127,11 @@ val stubAppCheckPatch = bytecodePatch(
             !AccessFlags.STATIC.isSet(it.accessFlags) && it.returnType == TASK && it.parameterTypes == listOf("Z")
         } ?: throw PatchException("provider token method (Z)Task not found")
 
-        // 3. The AppCheckToken result class, via the pigeon reply wrapper.
+        // 3. The AppCheckToken result class.
         val replyWrapperTypes = allClasses.values.filter { it.methods.any { m -> m.referencesString(APP_CHECK_ERROR_CODE) } }
         if (replyWrapperTypes.size != 1) throw PatchException("pigeon App Check reply wrapper not found")
-        val tokenTypes = buildSet {
-            replyWrapperTypes.single().methods.forEach { m -> m.castTypes(this) }
-        }.filter { type -> allClasses[type]?.hasTokenCtor() == true }
-        if (tokenTypes.isEmpty()) throw PatchException("AppCheckToken result class not found")
-        if (tokenTypes.size > 1) throw PatchException("ambiguous AppCheckToken classes: $tokenTypes")
-        val tokenType = tokenTypes.single()
+        val tokenType = findTokenClass(allClasses, replyWrapperTypes.single())
+            ?: throw PatchException("AppCheckToken result class not found (or ambiguous)")
 
         // 4. Replace the token task's body: return a successful task with a throwaway token
         //    (expiresIn 1 h, issued now). The old body -- the whole Play Integrity attestation and

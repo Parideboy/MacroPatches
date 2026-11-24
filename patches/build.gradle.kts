@@ -17,6 +17,7 @@ patches {
 val patchListGeneratorClasspath = configurations.create("patchListGeneratorClasspath")
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2") // TEMP
     compileOnly(libs.gson)
     patchListGeneratorClasspath(libs.gson)
 
