@@ -1,3 +1,9 @@
+## [1.21.0](https://github.com/Parideboy/MacroPatches/compare/v1.20.2...v1.21.0) (2026-11-27)
+
+### ✨ New Features
+
+* **targapp:** unlock Pro for Targapp 4.10.0 ([91c4db1](https://github.com/Parideboy/MacroPatches/commit/91c4db1c2b007dbf10a25ab972673bc2a0e17cc6))
+
 ## [1.20.2](https://github.com/Parideboy/morphe-patches/compare/v1.20.1...v1.20.2) (2026-11-24)
 
 ### 🐛 Bug Fixes

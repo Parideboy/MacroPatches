@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-24T13:07:36",
-  "description": "## [1.20.2](https://github.com/Parideboy/morphe-patches/compare/v1.20.1...v1.20.2) (2026-11-24)\n\n### 🐛 Bug Fixes\n\n* **macrofactor:** one premium patch, robust App Check token lookup ([573c20c](https://github.com/Parideboy/morphe-patches/commit/573c20c6faf8379818a9bece50f10e2be0855477))",
-  "download_url": "https://github.com/Parideboy/morphe-patches/releases/download/v1.20.2/patches-1.20.2.mpp",
+  "created_at": "2026-11-27T02:46:06",
+  "description": "## [1.21.0](https://github.com/Parideboy/MacroPatches/compare/v1.20.2...v1.21.0) (2026-11-27)\n\n### ✨ New Features\n\n* **targapp:** unlock Pro for Targapp 4.10.0 ([91c4db1](https://github.com/Parideboy/MacroPatches/commit/91c4db1c2b007dbf10a25ab972673bc2a0e17cc6))",
+  "download_url": "https://github.com/Parideboy/MacroPatches/releases/download/v1.21.0/patches-1.21.0.mpp",
   "signature_download_url": "",
-  "version": "1.20.2"
+  "version": "1.21.0"
 }
